@@ -33,15 +33,15 @@ file(GLOB QT_WRAP *.h)
 file(GLOB CXX_FILES *.cxx)
 
 # We are creating an executable project, and including the source files into it
-add_executable(assignment ${CXX_FILES} ${QT_WRAP})
+add_executable(Final_Project ${CXX_FILES} ${QT_WRAP})
 
 # Tell Qt which modules to use (there are others, like Test and Sql for example)
-qt5_use_modules(assignment Core Gui Widgets winextras)
+qt5_use_modules(Final_Project Core Gui Widgets winextras)
 
 # Set the startup project in Visual Studio to be our project (rather than the extra stuff CMake builds)
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT assignment)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Final_Project)
 
 # Tell the project which libraries to link (Qt does this automatically)
-target_link_libraries(assignment ${VTK_LIBRARIES})
-target_link_libraries(assignment ${ITK_LIBRARIES})
-target_link_libraries(assignment ${OpenCV_LIBS})
+target_link_libraries(Final_Project ${VTK_LIBRARIES})
+target_link_libraries(Final_Project ${ITK_LIBRARIES})
+target_link_libraries(Final_Project ${OpenCV_LIBS})
