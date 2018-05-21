@@ -36,6 +36,8 @@
 class ui : public QMainWindow
 {
 	Q_OBJECT
+private:
+	
 public:
 	// CLASS VARIABLES HERE
 
