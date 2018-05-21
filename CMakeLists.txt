@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Name the project
-PROJECT(assignment)
+PROJECT(Final_Project)
 
 # Say where the libraries are located
 set(VTK_DIR "D:/vtk/vtk_build/")
