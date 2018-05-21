@@ -6,10 +6,10 @@ cmake_minimum_required(VERSION 2.8)
 PROJECT(assignment)
 
 # Say where the libraries are located
-set(VTK_DIR "C:/libs/vtk/bin/")
-set(ITK_DIR "C:/libs/itk/bin/")
-set(CMAKE_PREFIX_PATH "C:/libs/qt/5.7/msvc2015_64/")
-set(OpenCV_DIR "C:/libs/opencv/")
+set(VTK_DIR "D:/vtk/vtk_build/")
+set(ITK_DIR "D:/itk/itk_build/")
+set(CMAKE_PREFIX_PATH "D:/Qt/Qt5.10.1/5.10.1/msvc2017_64/")
+set(OpenCV_DIR "D:/opencv/build/")
 
 # Find and include VTK
 find_package(VTK REQUIRED)
