@@ -18,6 +18,8 @@
 #include <vtkRenderer.h>
 #include <vtkColorTransferFunction.h>
 #include <vtkPiecewiseFunction.h>
+#include <vtkMarchingContourFilter.h>
+#include <vtkPolyDataMapper.h>
 
 // ITK header files
 #include <itkImage.h>
@@ -65,6 +67,9 @@ private:
 	vtkNew<vtkRenderer> ren1;
 	vtkNew<vtkColorTransferFunction> color;
 	vtkNew<vtkPiecewiseFunction> compositeOpacity;
+	vtkNew<vtkMarchingContourFilter> contour;
+	vtkNew<vtkPolyDataMapper> mapper;
+	vtkNew<vtkActor> actor;
 public:
 	
 	// Constructor (happens when created)
@@ -85,7 +90,7 @@ public:
 		viewport->SetRenderWindow(window1.Get());
 		volumeProperty->ShadeOff();
 		volumeProperty->SetInterpolationType(VTK_LINEAR_INTERPOLATION);
-		compositeOpacity->AddPoint(0.0, 0.0);
+		/*compositeOpacity->AddPoint(0.0, 0.0);
 		compositeOpacity->AddPoint(80.0, 1.0);
 		compositeOpacity->AddPoint(80.1, 0.0);
 		compositeOpacity->AddPoint(255.0, 0.0);
@@ -93,7 +98,7 @@ public:
 		color->AddRGBPoint(0.0, 0.0, 0.0, 1.0);
 		color->AddRGBPoint(40.0, 1.0, 0.0, 0.0);
 		color->AddRGBPoint(255.0, 1.0, 1.0, 1.0);
-		volumeProperty->SetColor(color);
+		volumeProperty->SetColor(color);*/
 		but1 = new QPushButton("Load Data");
 		but1->setFixedSize(100, 30);
 		// Layout the widgets
@@ -117,14 +122,19 @@ public slots: // This tells Qt we are defining slots here
 	{
 		// read all the dicom files in the specific directory
 
-		reader->SetDirectoryName("C:/Users/DoseOptics/Desktop/engs_199_final_project/data/d14068");
+		reader->SetDirectoryName("C:/Users/Tianshun/Desktop/engs199_final/data/d14068");
 		reader->Update();
 		// Image viewer
-		volumeMapper->SetInputConnection(reader->GetOutputPort());
-		volumeMapper->SetRequestedRenderModeToRayCast();
-		vol->SetMapper(volumeMapper);
-		vol->SetProperty(volumeProperty);
-		ren1->AddViewProp(vol);
+		contour->SetInputConnection(reader->GetOutputPort());
+		contour->SetValue(0, -400);
+		contour->Update();
+		//volumeMapper->SetInputConnection(contour->GetOutputPort());
+		//volumeMapper->SetRequestedRenderModeToRayCast();
+		/*vol->SetMapper(volumeMapper);
+		vol->SetProperty(volumeProperty);*/
+		mapper->SetInputConnection(contour->GetOutputPort());
+		actor->SetMapper(mapper);
+		ren1->AddActor(actor);
 		ren1->ResetCamera();
 		viewport->GetRenderWindow()->AddRenderer(ren1);
 		viewport->GetRenderWindow()->Render();
