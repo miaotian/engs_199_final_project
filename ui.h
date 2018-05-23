@@ -29,7 +29,6 @@
 #include <vtkDataSet.h>
 #include <vtkPointData.h>
 #include <vtkProperty.h>
-#include <vtkRenderWindowInteractor.h>
 // ITK header files
 #include <itkImage.h>
 #include <itkImageFileReader.h>
@@ -55,7 +54,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-
+#include <fstream>
 // Class that represents the main window for our application
 class ui : public QMainWindow
 {
@@ -84,7 +83,7 @@ private:
 	vtkPolyData * surf;
 	vtkNew<vtkPNGReader> reader2;
 	vtkRenderWindow * rendw;
-	vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
+	
 	int num_p;
 public:
 	
@@ -92,7 +91,7 @@ public:
 	ui()
 	{
 		// Resize the window
-		this->resize(1000, 600); // CHANGE THIS
+		this->resize(1800, 800); // CHANGE THIS
 
 		// Create the "central" (primary) widget for the window
 		QWidget *widget = new QWidget();
@@ -121,10 +120,10 @@ public:
 		cam1->SetPosition(-1247.36, -1048.52, -654.272);
 		cam1->SetFocalPoint(-12.5727, 11.141, 5.87349);
 		cam1->SetViewUp(0.529516, -0.797376, 0.289491);
-		cam1->SetViewAngle(11.7327);
+		cam1->SetViewAngle(2);
 
 		// Configure coordinate
-		coord->SetCoordinateSystemToDisplay();
+		coord->SetCoordinateSystemToWorld();
 		rendw = viewport->GetRenderWindow();
 		// Connected widget signals to slots
 		// YOUR CODE HERE
@@ -141,7 +140,7 @@ public slots: // This tells Qt we are defining slots here
 	void load_data()
 	{
 		// read all the dicom files in the specific directory
-		reader->SetDirectoryName("C:/Users/Turing/Desktop/engs199_final/data/d14068-39-anon");
+		reader->SetDirectoryName("C:/Users/DoseOptics/Desktop/engs_199_final_project/data/d14068-39-anon");
 		reader->Update();
 		// Image viewer
 		flipYFilter->SetFilteredAxis(1);
@@ -155,27 +154,26 @@ public slots: // This tells Qt we are defining slots here
 		contour->SetInputConnection(flipZFilter->GetOutputPort());
 		contour->SetValue(0, -400);
 		contour->Update();
+		surf = contour->GetOutput();
+		num_p = surf->GetNumberOfPoints();
 		mapper->SetInputConnection(contour->GetOutputPort());
 		mapper->Update();
 		actor->SetMapper(mapper);
-		actor->GetProperty()->SetColor(1.0, 1.0, 1.0);
-		ren1->AddActor(actor);
-		ren1->ResetCamera();
+		actor->GetProperty()->SetColor(0.0, 1.0, 1.0);
 		ren1->SetActiveCamera(cam1);
 		rendw->AddRenderer(ren1);
-		//renderWindowInteractor->SetRenderWindow(rendw);
+		ren1->AddActor(actor);
 		rendw->Render();
-		//renderWindowInteractor->Start();
-		// test code for the polydata structure
-		surf = contour->GetOutput();
-		num_p = surf->GetNumberOfPoints();
-		//std::cout << "The total number of pieces is " << num_p << std::endl;
+	
 	}
 
 	void load_png()
 	{
 		// first read the image data
-		reader2->SetFileName("C:/Users/Turing/Desktop/engs199_final/data/185.PNG");
+		ofstream myfile;
+		myfile.open("test.txt");
+		
+		reader2->SetFileName("C:/Users/DoseOptics/Desktop/engs_199_final_project/data/185.PNG");
 		reader2->Update();
 		unsigned short * image_array = static_cast<unsigned short *> (reader2->GetOutput()->GetScalarPointer());
 		vtkNew<vtkUnsignedShortArray> my_array;
@@ -187,15 +185,16 @@ public slots: // This tells Qt we are defining slots here
 		{
 			pos = surf->GetPoint(i);
 			coord->SetValue(pos);
-			p = coord->GetComputedDisplayValue(ren1);
+			p = coord->GetComputedViewportValue(ren1);
 			if (p[0] >= 0 && p[0] <= width && p[1] >= 0 && p[1] <= height)
 				val = image_array[p[0] + p[1] * width];
 			else
 				val = 0;
 			my_array->InsertNextValue(val);
+			myfile << p[0] << " " << p[1] << std::endl;
 		}
+		myfile.close();
 		surf->GetPointData()->SetScalars(my_array);
-		
-		viewport->GetRenderWindow()->Render();
+		rendw->Render();
 	}
 };
