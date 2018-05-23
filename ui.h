@@ -24,7 +24,10 @@
 #include <vtkCoordinate.h>
 #include <vtkImageFlip.h>
 #include <vtkPolyData.h>
-
+#include <vtkPNGReader.h>
+#include <vtkUnsignedShortArray.h>
+#include <vtkDataSet.h>
+#include <vtkPointData.h>
 // ITK header files
 #include <itkImage.h>
 #include <itkImageFileReader.h>
@@ -57,6 +60,7 @@ class ui : public QMainWindow
 private:
 	// Declaration of  CLASS VARIABLES HERE
 	QPushButton * but1;
+	QPushButton * but2;
 	QSlider *sl1;
 	QLabel *label1;
 	QVBoxLayout *layout_vertical;
@@ -74,6 +78,8 @@ private:
 	vtkNew<vtkCoordinate> coord;
 	vtkNew<vtkImageFlip> flipYFilter;
 	vtkNew<vtkImageFlip> flipZFilter;
+	vtkPolyData * surf;
+	vtkNew<vtkPNGReader> reader2;
 	int num_p;
 public:
 	
@@ -81,7 +87,7 @@ public:
 	ui()
 	{
 		// Resize the window
-		this->resize(800, 700); // CHANGE THIS
+		this->resize(1000, 600); // CHANGE THIS
 
 		// Create the "central" (primary) widget for the window
 		QWidget *widget = new QWidget();
@@ -93,14 +99,20 @@ public:
 		QSurfaceFormat::setDefaultFormat(QVTKOpenGLWidget::defaultFormat());
 		viewport = new QVTKOpenGLWidget();
 		viewport->SetRenderWindow(window1.Get());
-		but1 = new QPushButton("Load Data");
+		viewport->GetRenderWindow()->SetSize(1920, 1200);
+		but1 = new QPushButton("Load CT");
 		but1->setFixedSize(100, 30);
+		but2 = new QPushButton("Load PNG");
+		but2->setFixedSize(100, 30);
 		// Layout the widgets
 		// YOUR CODE HERE
 		layout_vertical = new QVBoxLayout();
+		layout_horizontal = new QHBoxLayout();
 		widget->setLayout(layout_vertical);
 		layout_vertical->addWidget(viewport);
-		layout_vertical->addWidget(but1);
+		layout_vertical->addLayout(layout_horizontal);
+		layout_horizontal->addWidget(but1);
+		layout_horizontal->addWidget(but2);
 		cam1->SetPosition(-1247.36, -1048.52, -654.272);
 		cam1->SetFocalPoint(-12.5727, 11.141, 5.87349);
 		cam1->SetViewUp(0.529516, -0.797376, 0.289491);
@@ -111,6 +123,7 @@ public:
 		// Connected widget signals to slots
 		// YOUR CODE HERE
 		connect(but1, SIGNAL(released()), this, SLOT(load_data()));
+		connect(but2, SIGNAL(released()), this, SLOT(load_png()));
 		// Display the window
 		this->show();
 	
@@ -122,7 +135,7 @@ public slots: // This tells Qt we are defining slots here
 	void load_data()
 	{
 		// read all the dicom files in the specific directory
-		reader->SetDirectoryName("C:/Users/DoseOptics/Desktop/engs_199_final_project/data/d14068-39-anon");
+		reader->SetDirectoryName("C:/Users/Tianshun/Desktop/engs199_final/data/d14068");
 		reader->Update();
 		// Image viewer
 		flipYFilter->SetFilteredAxis(1);
@@ -141,11 +154,35 @@ public slots: // This tells Qt we are defining slots here
 		ren1->AddActor(actor);
 		ren1->SetActiveCamera(cam1);
 		ren1->ResetCamera();
+		
 		viewport->GetRenderWindow()->AddRenderer(ren1);
 		viewport->GetRenderWindow()->Render();
-		vtkPolyData * test_poly;
-		test_poly = mapper->GetInput();
-		num_p = test_poly->GetNumberOfPoints();
-		std::cout << "The total number of pieces is " << num_p << std::endl;
+		// test code for the polydata structure
+		surf = mapper->GetInput();
+		num_p = surf->GetNumberOfPoints();
+		//std::cout << "The total number of pieces is " << num_p << std::endl;
+	}
+
+	void load_png()
+	{
+		// first read the image data
+		reader2->SetFileName("C:/Users/Tianshun/Desktop/engs199_final/data/185.PNG");
+		reader->Update();
+		unsigned short * image_array = static_cast<unsigned short *> (reader2->GetOutput()->GetScalarPointer());
+		vtkNew<vtkUnsignedShortArray> my_array;
+		int width = 1920, height = 1200;
+		double * pos;
+		int * p;
+		unsigned short val;
+		for (int i = 0; i < num_p; i++)
+		{
+			pos = surf->GetPoint(i);
+			coord->SetValue(pos);
+			p = coord->GetComputedDisplayValue(ren1);
+			val = image_array[p[0] + p[1] * width];
+			my_array->InsertNextValue(val);
+		}
+		surf->GetPointData()->SetScalars(my_array);
+		viewport->GetRenderWindow()->Render();
 	}
 };
