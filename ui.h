@@ -135,7 +135,7 @@ public slots: // This tells Qt we are defining slots here
 	void load_data()
 	{
 		// read all the dicom files in the specific directory
-		reader->SetDirectoryName("C:/Users/Tianshun/Desktop/engs199_final/data/d14068");
+		reader->SetDirectoryName("C:/Users/DoseOptics/Desktop/engs_199_final_project/data/d14068-39-anon");
 		reader->Update();
 		// Image viewer
 		flipYFilter->SetFilteredAxis(1);
@@ -153,12 +153,12 @@ public slots: // This tells Qt we are defining slots here
 		actor->SetMapper(mapper);
 		ren1->AddActor(actor);
 		ren1->SetActiveCamera(cam1);
-		ren1->ResetCamera();
+		//ren1->ResetCamera();
 		
 		viewport->GetRenderWindow()->AddRenderer(ren1);
 		viewport->GetRenderWindow()->Render();
 		// test code for the polydata structure
-		surf = mapper->GetInput();
+		surf = contour->GetOutput();
 		num_p = surf->GetNumberOfPoints();
 		//std::cout << "The total number of pieces is " << num_p << std::endl;
 	}
@@ -166,8 +166,8 @@ public slots: // This tells Qt we are defining slots here
 	void load_png()
 	{
 		// first read the image data
-		reader2->SetFileName("C:/Users/Tianshun/Desktop/engs199_final/data/185.PNG");
-		reader->Update();
+		reader2->SetFileName("C:/Users/DoseOptics/Desktop/engs_199_final_project/data/185.PNG");
+		reader2->Update();
 		unsigned short * image_array = static_cast<unsigned short *> (reader2->GetOutput()->GetScalarPointer());
 		vtkNew<vtkUnsignedShortArray> my_array;
 		int width = 1920, height = 1200;
@@ -179,7 +179,10 @@ public slots: // This tells Qt we are defining slots here
 			pos = surf->GetPoint(i);
 			coord->SetValue(pos);
 			p = coord->GetComputedDisplayValue(ren1);
-			val = image_array[p[0] + p[1] * width];
+			if (p[0] >= 0 && p[0] <= width && p[1] >= 0 && p[1] <= height)
+				val = image_array[p[1] + p[0] * width];
+			else
+				val = 0;
 			my_array->InsertNextValue(val);
 		}
 		surf->GetPointData()->SetScalars(my_array);
