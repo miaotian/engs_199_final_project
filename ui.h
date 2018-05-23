@@ -28,6 +28,8 @@
 #include <vtkUnsignedShortArray.h>
 #include <vtkDataSet.h>
 #include <vtkPointData.h>
+#include <vtkProperty.h>
+#include <vtkRenderWindowInteractor.h>
 // ITK header files
 #include <itkImage.h>
 #include <itkImageFileReader.h>
@@ -52,6 +54,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+
 
 // Class that represents the main window for our application
 class ui : public QMainWindow
@@ -80,6 +83,8 @@ private:
 	vtkNew<vtkImageFlip> flipZFilter;
 	vtkPolyData * surf;
 	vtkNew<vtkPNGReader> reader2;
+	vtkRenderWindow * rendw;
+	vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
 	int num_p;
 public:
 	
@@ -120,6 +125,7 @@ public:
 
 		// Configure coordinate
 		coord->SetCoordinateSystemToDisplay();
+		rendw = viewport->GetRenderWindow();
 		// Connected widget signals to slots
 		// YOUR CODE HERE
 		connect(but1, SIGNAL(released()), this, SLOT(load_data()));
@@ -135,7 +141,7 @@ public slots: // This tells Qt we are defining slots here
 	void load_data()
 	{
 		// read all the dicom files in the specific directory
-		reader->SetDirectoryName("C:/Users/DoseOptics/Desktop/engs_199_final_project/data/d14068-39-anon");
+		reader->SetDirectoryName("C:/Users/Turing/Desktop/engs199_final/data/d14068-39-anon");
 		reader->Update();
 		// Image viewer
 		flipYFilter->SetFilteredAxis(1);
@@ -150,13 +156,16 @@ public slots: // This tells Qt we are defining slots here
 		contour->SetValue(0, -400);
 		contour->Update();
 		mapper->SetInputConnection(contour->GetOutputPort());
+		mapper->Update();
 		actor->SetMapper(mapper);
+		actor->GetProperty()->SetColor(1.0, 1.0, 1.0);
 		ren1->AddActor(actor);
+		ren1->ResetCamera();
 		ren1->SetActiveCamera(cam1);
-		//ren1->ResetCamera();
-		
-		viewport->GetRenderWindow()->AddRenderer(ren1);
-		viewport->GetRenderWindow()->Render();
+		rendw->AddRenderer(ren1);
+		//renderWindowInteractor->SetRenderWindow(rendw);
+		rendw->Render();
+		//renderWindowInteractor->Start();
 		// test code for the polydata structure
 		surf = contour->GetOutput();
 		num_p = surf->GetNumberOfPoints();
@@ -166,7 +175,7 @@ public slots: // This tells Qt we are defining slots here
 	void load_png()
 	{
 		// first read the image data
-		reader2->SetFileName("C:/Users/DoseOptics/Desktop/engs_199_final_project/data/185.PNG");
+		reader2->SetFileName("C:/Users/Turing/Desktop/engs199_final/data/185.PNG");
 		reader2->Update();
 		unsigned short * image_array = static_cast<unsigned short *> (reader2->GetOutput()->GetScalarPointer());
 		vtkNew<vtkUnsignedShortArray> my_array;
@@ -180,12 +189,13 @@ public slots: // This tells Qt we are defining slots here
 			coord->SetValue(pos);
 			p = coord->GetComputedDisplayValue(ren1);
 			if (p[0] >= 0 && p[0] <= width && p[1] >= 0 && p[1] <= height)
-				val = image_array[p[1] + p[0] * width];
+				val = image_array[p[0] + p[1] * width];
 			else
 				val = 0;
 			my_array->InsertNextValue(val);
 		}
 		surf->GetPointData()->SetScalars(my_array);
+		
 		viewport->GetRenderWindow()->Render();
 	}
 };
