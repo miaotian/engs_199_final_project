@@ -23,6 +23,7 @@
 #include <vtkCamera.h>
 #include <vtkCoordinate.h>
 #include <vtkImageFlip.h>
+#include <vtkPolyData.h>
 
 // ITK header files
 #include <itkImage.h>
@@ -73,6 +74,7 @@ private:
 	vtkNew<vtkCoordinate> coord;
 	vtkNew<vtkImageFlip> flipYFilter;
 	vtkNew<vtkImageFlip> flipZFilter;
+	int num_p;
 public:
 	
 	// Constructor (happens when created)
@@ -103,6 +105,9 @@ public:
 		cam1->SetFocalPoint(-12.5727, 11.141, 5.87349);
 		cam1->SetViewUp(0.529516, -0.797376, 0.289491);
 		cam1->SetViewAngle(11.7327);
+
+		// Configure coordinate
+		coord->SetCoordinateSystemToDisplay();
 		// Connected widget signals to slots
 		// YOUR CODE HERE
 		connect(but1, SIGNAL(released()), this, SLOT(load_data()));
@@ -138,6 +143,9 @@ public slots: // This tells Qt we are defining slots here
 		ren1->ResetCamera();
 		viewport->GetRenderWindow()->AddRenderer(ren1);
 		viewport->GetRenderWindow()->Render();
-		coord->SetCoordinateSystemToViewport();
+		vtkPolyData * test_poly;
+		test_poly = mapper->GetInput();
+		num_p = test_poly->GetNumberOfPoints();
+		std::cout << "The total number of pieces is " << num_p << std::endl;
 	}
 };
